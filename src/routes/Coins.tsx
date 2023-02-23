@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import styled from "styled-components";
 
 const Container = styled.div`
@@ -22,6 +22,8 @@ const CoinsList = styled.ul`
 `;
 
 const Coin = styled.li`
+    display: flex;
+    align-items: center;
     background-color: whitesmoke;
     padding: 14px 20px;
     margin: 3px 0px;
@@ -39,6 +41,12 @@ const Loading = styled.div`
     text-align: center;
 `;
 
+const Img = styled.img`
+    height: 20px;
+    width: 20px;
+    margin-right: 8px;
+`;
+
 interface Icoins{
     "id":string,
     "name":string,
@@ -53,6 +61,8 @@ interface Icoins{
 function Coins(){
     const [coins,setCoins] = useState<Icoins[]>();
     const [loading, setLoading] = useState(true);
+    const location = useLocation()
+    console.log(location)
     useEffect((()=>{
         (async() =>{
             const response = await fetch("https://api.coinpaprika.com/v1/coins")
@@ -69,7 +79,9 @@ function Coins(){
             </Header>
             {loading ? <Loading>Loading...</Loading> :<CoinsList>
                 {coins?.map(coin => <Coin>
-                    <Link to={`/${coin.id}`}>{coin.name} &rarr;</Link></Coin>)}
+                    <Img src={`https://coinicons-api.vercel.app/api/icon/${coin.symbol.toLowerCase()}`}></Img>
+                    <Link to={`/${coin.id}`} state={`${coin.name}`}>{coin.name} &rarr;</Link>
+                    </Coin>)}
             </CoinsList> }  
         </Container> 
     );
