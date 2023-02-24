@@ -9,6 +9,7 @@ const Container = styled.div`
     max-width: 400px;
     width: 80%;
     margin : 0 auto;
+    
 `;
 
 const Header = styled.header`
@@ -16,12 +17,14 @@ const Header = styled.header`
     justify-content: center;
     padding: 10px;
     align-items: center;
+    position: relative;
+    width: 100%;
 `;
 
 const BackButton = styled.div`
     position: absolute;
-    left: 50px;
-    color : grey;
+    left: 0;
+    color : ${props=>props.theme.textColor};
 `;
 
 const Title = styled.h1`
@@ -40,7 +43,7 @@ const Coindetail = styled.div`
     flex-direction: column;
     align-items: center;
     border-radius: 10px;
-    background-color: whitesmoke;
+    background-color: ${props=>props.theme.bgColor2};
     padding: 10px 15px;
 
 `;
@@ -79,12 +82,12 @@ const DetailButtons=styled.div`
 const Linkdiv = styled.div<{isActive : boolean}>`
     width: 45%;
     text-align: center;
-    background-color: whitesmoke;
+    background-color: ${props=>props.theme.bgColor2};
     border-radius: 15px;
     padding: 5px 0px;
     font-size: 14px;
-    color : ${props => props.isActive ? props.theme.textColor : 'rgba(128, 128, 128)' };
-    font-weight: ${props => props.isActive ? 600 : 400};
+    color : ${props => props.theme.textColor};
+    font-weight: ${props => props.isActive ? 800 : 400};
 `;
 const Img = styled.img`
     width: 20px;
@@ -92,6 +95,10 @@ const Img = styled.img`
     margin-right: 5px;
 `;
 
+const OutletDiv = styled.div`
+    display: flex;
+    justify-content: center;
+`;
 
 interface IInfoData{
     id : string,
@@ -156,7 +163,10 @@ function Coin(){
     const priceMatch = useMatch("/:coinId/price");
     const chartMatch = useMatch("/:coinId/chart");
     const {isLoading : infoLoading, data : infoData} = useQuery<IInfoData>(`${coinId}Info`,()=>fetchCoinInfo(coinId))
-    const {isLoading : priceLoading, data : priceData} = useQuery<IPriceData>(`${coinId}Price`,()=>fetchCoinPrice(coinId))
+    const {isLoading : priceLoading, data : priceData} = useQuery<IPriceData>(`${coinId}Price`,()=>fetchCoinPrice(coinId),
+        {
+            refetchInterval: 5000,
+        })
     return (
     <Container>
         <Header>
@@ -185,12 +195,17 @@ function Coin(){
                 </Coindetail>
 
                 <DetailButtons>
-                    <Linkdiv isActive={priceMatch !== null}><Link to={`/${coinId}/price`}>Price</Link></Linkdiv>
+                    <Linkdiv isActive={priceMatch !== null}>
+                        <Link 
+                            to={`/${coinId}/price`}
+                            state={{priceData : priceData?.quotes.USD}}>Price</Link></Linkdiv>
                     <Linkdiv isActive={chartMatch !== null}><Link to={`/${coinId}/chart`}>Chart</Link></Linkdiv>
                 </DetailButtons>
             </>
         }
-        <Outlet context={{coinId}}/>
+        <OutletDiv>
+            <Outlet context={{coinId}}/>
+        </OutletDiv>
     </Container>
     );
 }

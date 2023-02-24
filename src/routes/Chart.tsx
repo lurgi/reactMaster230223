@@ -1,7 +1,6 @@
 import Chart from "react-apexcharts";
 import { useQuery } from "react-query";
 import { useOutletContext } from "react-router-dom";
-import { transform } from "typescript";
 import { fetchOHLCV } from "./api";
 
 interface Idata{
@@ -21,7 +20,7 @@ interface IOutletChart{
 
 export default function Charts(){
     const {coinId} = useOutletContext<IOutletChart>();
-    const {isLoading, data} =useQuery<Idata[]>("",()=>fetchOHLCV(coinId))
+    const {isLoading, data} =useQuery<Idata[]>(`${coinId}fetchOHLCV`,()=>fetchOHLCV(coinId))
     let ans = [];
     if(data!==undefined)
     for(let i = 0 ; i < data?.length; i++){
@@ -30,16 +29,18 @@ export default function Charts(){
             let Obj = {x:a, y:b}
             ans.push(Obj);
     }
-    console.log(ans)
     return (
         <>
             {isLoading ? "Loading..." : 
                 <Chart
                     style={{
-                        marginTop:20,
+                        marginTop:10,
                     }}
                     type="candlestick"
                     options={{
+                        // theme:{
+                        //     mode:
+                        // },
                         tooltip:{
                             y:{
                                 formatter:(value)=>`$ ${value}`

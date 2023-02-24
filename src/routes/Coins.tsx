@@ -12,6 +12,7 @@ const Header = styled.header`
     display: flex;
     justify-content: center;
     padding: 10px;
+    position: relative;
 `;
 
 const CoinsList = styled.ul`
@@ -25,7 +26,8 @@ const CoinsList = styled.ul`
 const Coin = styled.li`
     display: flex;
     align-items: center;
-    background-color: whitesmoke;
+    background-color: ${props=>props.theme.bgColor2};
+    color: ${props=>props.theme.textColor};
     padding: 14px 20px;
     margin: 3px 0px;
     width: 80%;
@@ -60,7 +62,7 @@ interface Icoins{
 
 
 function Coins(){
-    const {isLoading, data} = useQuery<Icoins[]>("fetchCoins",fetchCoins)    
+    const {isLoading, data} = useQuery<Icoins[]>("fetchCoins",fetchCoins)
     return (
         <Container>
             <Header>
