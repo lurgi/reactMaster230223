@@ -1,0 +1,26 @@
+const BASE_URL = "https://api.coinpaprika.com/v1";
+
+
+export async function fetchCoins(){
+    const responce = await fetch(`${BASE_URL}/coins`)
+    const json = await responce.json()
+    return json
+};
+
+export async function fetchCoinInfo(coinId ?: string) {
+    const response = await fetch(`${BASE_URL}/coins/${coinId}`)
+    const json = response.json();
+    return json
+}
+
+export async function fetchCoinPrice(coinId ?: string) {
+    const response = await fetch(`${BASE_URL}/tickers/${coinId}`)
+    const json = response.json();
+    return json
+}
+
+export async function fetchOHLCV(coinId ?: string) {
+    const response = await fetch(`https://ohlcv-api.nomadcoders.workers.dev?coinId=${coinId}`);
+    const json = response.json();
+    return json
+}

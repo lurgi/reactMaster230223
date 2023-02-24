@@ -1,14 +1,13 @@
-import { useEffect, useState } from "react";
-import { Link, Outlet, Route, Routes, useLocation, useMatch, useParams } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useQuery } from "react-query";
+import { Link, Outlet, useLocation, useMatch, useParams } from "react-router-dom";
 import styled from "styled-components";
-import Chart from "./Chart";
-import Price from "./Price";
+import { fetchCoinInfo, fetchCoinPrice } from "./api";
+import {faChevronLeft} from "@fortawesome/free-solid-svg-icons";
 
 const Container = styled.div`
     max-width: 400px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    width: 80%;
     margin : 0 auto;
 `;
 
@@ -16,6 +15,13 @@ const Header = styled.header`
     display: flex;
     justify-content: center;
     padding: 10px;
+    align-items: center;
+`;
+
+const BackButton = styled.div`
+    position: absolute;
+    left: 50px;
+    color : grey;
 `;
 
 const Title = styled.h1`
@@ -36,7 +42,6 @@ const Coindetail = styled.div`
     border-radius: 10px;
     background-color: whitesmoke;
     padding: 10px 15px;
-    width: 80vw;
 
 `;
 
@@ -66,7 +71,7 @@ const PriceDetailColumn = styled.div`
 `;
 
 const DetailButtons=styled.div`
-    width: 80%;
+    width: 100%;
     display: flex;
     justify-content: space-between;
     margin-top: 10px;
@@ -80,7 +85,11 @@ const Linkdiv = styled.div<{isActive : boolean}>`
     font-size: 14px;
     color : ${props => props.isActive ? props.theme.textColor : 'rgba(128, 128, 128)' };
     font-weight: ${props => props.isActive ? 600 : 400};
-    
+`;
+const Img = styled.img`
+    width: 20px;
+    height: 20px;
+    margin-right: 5px;
 `;
 
 
@@ -143,61 +152,47 @@ interface IPriceData{
 
 function Coin(){
     const {coinId} = useParams();
-    const [loading, setLoading] = useState(true);
-    const {state} = useLocation();
-    const [info, setInfo] = useState<IInfoData>();
-    const [price, setPrice] = useState<IPriceData>();
+    const {state}= useLocation();
     const priceMatch = useMatch("/:coinId/price");
     const chartMatch = useMatch("/:coinId/chart");
-    useEffect(()=>{
-        (async() =>{
-            const infoData = await(
-                await fetch(`https://api.coinpaprika.com/v1/coins/${coinId}`)).json()
-            console.log(infoData)
-            setInfo(infoData)
-            const priceData = await(
-                await fetch(`https://api.coinpaprika.com/v1/tickers/${coinId}`)).json()
-            console.log(priceData)
-            setPrice(priceData)
-
-            setLoading(false);
-        })()
-    },[coinId]);
+    const {isLoading : infoLoading, data : infoData} = useQuery<IInfoData>(`${coinId}Info`,()=>fetchCoinInfo(coinId))
+    const {isLoading : priceLoading, data : priceData} = useQuery<IPriceData>(`${coinId}Price`,()=>fetchCoinPrice(coinId))
     return (
     <Container>
         <Header>
-            <Title>{state ? state : loading ? 'Loading...' : info?.name}</Title>
+            <BackButton><Link to="/"><FontAwesomeIcon icon={faChevronLeft} /></Link></BackButton>
+            <Img src={state?.src ? state.src : `https://coinicons-api.vercel.app/api/icon/${infoData?.symbol.toLowerCase()}`}></Img>
+            <Title>{state?.name ? state?.name : infoLoading ? 'Loading...' : infoData?.name}</Title>
         </Header>
-        {loading ? <Loading>Loading...</Loading> : 
-            <Coindetail>
-                <Description>{info?.description}</Description>
-                <PriceDetail>
-                    <PriceDetailColumn>
-                            <div>ATH</div>
-                            <span>{Number(price?.quotes.USD.ath_price).toFixed(2)}$</span>
-                    </PriceDetailColumn>
-                    <PriceDetailColumn>
-                            <div>Price</div>
-                            <span>{Number(price?.quotes.USD.price).toFixed(2)}$</span>
-                    </PriceDetailColumn>
-                    <PriceDetailColumn>
-                            <div>Today Chnage</div>
-                            <span>{Number(price?.quotes.USD.percent_change_24h).toFixed(2)}%</span>
-                    </PriceDetailColumn>
-                </PriceDetail>
-            </Coindetail>
+        {priceLoading ? <Loading>Loading...</Loading> : 
+            <>
+                <Coindetail>
+                    <Description>{infoData?.description}</Description>
+                    <PriceDetail>
+                        <PriceDetailColumn>
+                                <div>ATH</div>
+                                <span>{Number(priceData?.quotes.USD.ath_price).toFixed(2)}$</span>
+                        </PriceDetailColumn>
+                        <PriceDetailColumn>
+                                <div>Price</div>
+                                <span>{Number(priceData?.quotes.USD.price).toFixed(2)}$</span>
+                        </PriceDetailColumn>
+                        <PriceDetailColumn>
+                                <div>Today Chnage</div>
+                                <span>{Number(priceData?.quotes.USD.percent_change_24h).toFixed(2)}%</span>
+                        </PriceDetailColumn>
+                    </PriceDetail>
+                </Coindetail>
+
+                <DetailButtons>
+                    <Linkdiv isActive={priceMatch !== null}><Link to={`/${coinId}/price`}>Price</Link></Linkdiv>
+                    <Linkdiv isActive={chartMatch !== null}><Link to={`/${coinId}/chart`}>Chart</Link></Linkdiv>
+                </DetailButtons>
+            </>
         }
-            <DetailButtons>
-                <Linkdiv isActive={priceMatch !== null}><Link to={`/${coinId}/price`}>Price</Link></Linkdiv>
-                <Linkdiv isActive={chartMatch !== null}><Link to={`/${coinId}/chart`}>Chart</Link></Linkdiv>
-            </DetailButtons>
-        <Outlet/>
+        <Outlet context={{coinId}}/>
     </Container>
     );
 }
 
 export default Coin
-
-function useRouteMatch() {
-    throw new Error("Function not implemented.");
-}
